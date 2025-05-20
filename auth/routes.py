@@ -154,5 +154,5 @@ def login():
         return jsonify({'msg': '帳號或密碼錯誤'}), 401
     if not user.is_verified:
         return jsonify({'msg': '請先完成信箱驗證'}), 403
-    token = create_access_token(identity=user.id,expires_delta=24*60*60)  # 24 hours
+    token = create_access_token(identity=user.id,expires_delta=12*60*60)  # 24 hours
     return jsonify({'token': token})
