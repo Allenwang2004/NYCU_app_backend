@@ -62,11 +62,11 @@ def set_is_filled():
     db.session.commit()
     return jsonify({'msg': '已設為填寫完成'})
 
-@users_bp.route('/mood', methods=['POST'])
+@users_bp.route('/log', methods=['POST'])
 @jwt_required()
-def add_mood_log():
+def add_or_update_log():
     """
-    新增心情紀錄 (需要 JWT)
+    新增或更新心情與日記紀錄 (需要 JWT)
     ---
     tags:
       - Users
@@ -86,26 +86,40 @@ def add_mood_log():
             mood:
               type: string
               example: "開心"
+            diary:
+              type: string
+              example: "今天過得很好！"
     responses:
-      201:
-        description: 新增成功
+      200:
+        description: 紀錄新增或更新成功
     """
     user_id = get_jwt_identity()
     data = request.json
-    mood_date = datetime.strptime(data.get('date'), '%Y-%m-%d').date()
-    mood_text = data.get('mood', '')
 
-    new_log = MoodLog(user_id=user_id, date=mood_date, mood=mood_text)
-    db.session.add(new_log)
+    log_date = datetime.strptime(data.get('date'), '%Y-%m-%d').date()
+    mood = data.get('mood')
+    diary = data.get('diary')
+
+    log = MoodLog.query.filter_by(user_id=user_id, date=log_date).first()
+    if log:
+        # 已存在：更新
+        if mood is not None:
+            log.mood = mood
+        if diary is not None:
+            log.diary = diary
+    else:
+        # 不存在：新增
+        log = MoodLog(user_id=user_id, date=log_date, mood=mood or '', diary=diary or '')
+        db.session.add(log)
+
     db.session.commit()
+    return jsonify({'msg': '紀錄成功'}), 200
 
-    return jsonify({'msg': '新增成功'}), 201
-
-@users_bp.route('/mood', methods=['GET'])
+@users_bp.route('/log', methods=['GET'])
 @jwt_required()
-def get_mood_logs():
+def get_all_logs():
     """
-    取得使用者所有心情紀錄 (需要 JWT)
+    取得使用者所有心情與日記紀錄 (需要 JWT)
     ---
     tags:
       - Users
@@ -113,7 +127,7 @@ def get_mood_logs():
       - Bearer: []
     responses:
       200:
-        description: 回傳心情紀錄列表
+        description: 回傳所有紀錄列表
         schema:
           type: object
           properties:
@@ -128,8 +142,18 @@ def get_mood_logs():
                   mood:
                     type: string
                     example: "開心"
+                  diary:
+                    type: string
+                    example: "今天過得很好！"
     """
     user_id = get_jwt_identity()
-    logs = MoodLog.query.filter_by(user_id=user_id).all()
-    result = [{'date': log.date.isoformat(), 'mood': log.mood} for log in logs]
+    logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.date.desc()).all()
+    result = [
+        {
+            'date': log.date.isoformat(),
+            'mood': log.mood,
+            'diary': log.diary
+        }
+        for log in logs
+    ]
     return jsonify({'logs': result})

@@ -27,6 +27,11 @@ class MoodLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     date = db.Column(db.Date, nullable=False, default=date.today)
-    mood = db.Column(db.String(50), nullable=False)
+    mood = db.Column(db.String(50))
+    diary = db.Column(db.Text, nullable=True)
 
     user = db.relationship('User', backref=db.backref('mood_logs', lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'date', name='uix_user_date'),
+    )

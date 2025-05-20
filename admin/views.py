@@ -18,11 +18,12 @@ class ProtectedModelView(ModelView):
         return redirect(url_for("admin_auth.admin_login"))
 
 class MoodLogView(ModelView):
-    column_list = ('user_name','date', 'mood')  # 顯示 user_name 而不是 user_id
+    column_list = ('user_name','date', 'mood', 'diary')  # 顯示 user_name 而不是 user_id
     column_labels = {
         'user_name': '使用者名稱',
         'date': '日期',
         'mood': '心情',
+        'diary': '日記'
     }
 
     def _user_name_formatter(view, context, model, name):
