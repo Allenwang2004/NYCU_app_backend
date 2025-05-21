@@ -2,7 +2,7 @@ from flask import jsonify
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
-from models import User, MoodLog
+from models import User, MoodLog, UserProfile
 from datetime import datetime
 from . import users_bp
 
@@ -157,3 +157,84 @@ def get_all_logs():
         for log in logs
     ]
     return jsonify({'logs': result})
+
+@users_bp.route('/profile', methods=['POST'])
+@jwt_required()
+def update_profile():
+    """
+    更新使用者個人資料 (需要 JWT)
+    ---
+    tags:
+      - Users
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          properties:
+            activity:
+              type: string
+              example: "喜歡運動"
+            profile_image:
+              type: string
+              example: "https://example.com/image.jpg"
+    responses:
+      200:
+        description: 更新成功
+    """
+    user_id = get_jwt_identity()
+    data = request.json
+
+    activity = data.get('activity')
+    profile_image = data.get('profile_image')
+    user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+    if user_profile:
+        # 更新
+        if activity is not None:
+            user_profile.activity = activity
+        if profile_image is not None:
+            user_profile.profile_image = profile_image
+    else:
+        # 新增
+        user_profile = UserProfile(user_id=user_id, activity=activity, profile_image=profile_image)
+        db.session.add(user_profile)
+    db.session.commit()
+    return jsonify({'msg': '更新成功'}), 200
+
+@users_bp.route('/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    """
+    取得使用者個人資料 (需要 JWT)
+    ---
+    tags:
+      - Users
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: 回傳使用者個人資料
+        schema:
+          type: object
+          properties:
+            activity:
+              type: string
+              example: "喜歡運動"
+            profile_image:
+              type: string
+              example: "https://example.com/image.jpg"
+    """
+    user_id = get_jwt_identity()
+    user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+    if not user_profile:
+        return jsonify({'msg': '找不到使用者個人資料'}), 400
+
+    result = {
+        'activity': user_profile.activity,
+        'profile_image': user_profile.profile_image
+    }
+    return jsonify(result)

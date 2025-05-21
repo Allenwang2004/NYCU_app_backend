@@ -35,3 +35,10 @@ class MoodLog(db.Model):
     __table_args__ = (
         db.UniqueConstraint('user_id', 'date', name='uix_user_date'),
     )
+
+class UserProfile(db.Model):
+    __tablename__ = 'user_profiles'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    activity = db.Column(db.Text, nullable=True)
+    profile_image = db.Column(db.String(256), nullable=True)
