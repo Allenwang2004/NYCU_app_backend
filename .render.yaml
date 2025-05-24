@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: flask-app
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn main:create_app()"
+    envVars:
+      - key: SQLALCHEMY_DATABASE_URI
+        value: postgresql://project_user:0927382377@140.113.26.107:5432/project_db
+      - key: SECRET_KEY
+        value: your-secret-key
+      - key: JWT_SECRET_KEY
+        value: your-jwt-secret
+      - key: MAIL_USERNAME
+        value: your-gmail@gmail.com
+      - key: MAIL_PASSWORD
+        value: your-app-password
+      - key: ADMIN_EMAIL
+        value: admin@email.com
+      - key: ADMIN_PASSWORD
+        value: admin-password
