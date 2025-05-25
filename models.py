@@ -1,6 +1,7 @@
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
+from sqlalchemy.dialects.postgresql import ARRAY
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -40,5 +41,5 @@ class UserProfile(db.Model):
     __tablename__ = 'user_profiles'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    activity = db.Column(db.Text, nullable=True)
+    activity = db.Column(ARRAY(db.Text), nullable=True)
     profile_image = db.Column(db.String(256), nullable=True)
